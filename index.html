@@ -20,14 +20,16 @@
       }
     </style>
   </head>
+
   <body>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <div id="mapSwitcher">
       <label>
-        <input type="radio" name="mapType" value="flow" checked> Flow Map
+        <input type="radio" name="mapType" value="flow" checked /> Flow Map
       </label>
       <label>
-        <input type="radio" name="mapType" value="proportional"> Proportional Symbol Map
+        <input type="radio" name="mapType" value="proportional" /> Proportional
+        Symbol Map
       </label>
     </div>
     <div id="mapContainer">
@@ -40,24 +42,26 @@
 
       var container = d3.select("#mapContainer");
 
-      var flowMap = d3.select("#flowMap")
+      var flowMap = d3
+        .select("#flowMap")
         .attr("width", width)
         .attr("height", height)
         .style("background", "#AFEEEE");
 
-      var proportionalMap = d3.select("#proportionalMap")
+      var proportionalMap = d3
+        .select("#proportionalMap")
         .attr("width", width)
         .attr("height", height)
         .style("background", "#AFEEEE");
 
       d3.json("world-map.geojson")
         .then(function (data) {
-          var projection = d3.geoMercator()
-            .fitSize([width, height], data);
+          var projection = d3.geoMercator().fitSize([width, height], data);
 
           var path = d3.geoPath().projection(projection);
 
-          flowMap.selectAll("path")
+          flowMap
+            .selectAll("path")
             .data(data.features)
             .enter()
             .append("path")
@@ -66,7 +70,8 @@
             .attr("stroke", "white")
             .attr("stroke-width", 0.5);
 
-          proportionalMap.selectAll("path")
+          proportionalMap
+            .selectAll("path")
             .data(data.features)
             .enter()
             .append("path")
@@ -83,9 +88,11 @@
       var flowMapElement = document.getElementById("flowMap");
       var proportionalMapElement = document.getElementById("proportionalMap");
 
-      mapSwitcher.addEventListener("change", function() {
-        var selectedMapType = document.querySelector('input[name="mapType"]:checked').value;
-        
+      mapSwitcher.addEventListener("change", function () {
+        var selectedMapType = document.querySelector(
+          'input[name="mapType"]:checked'
+        ).value;
+
         if (selectedMapType === "flow") {
           flowMapElement.classList.remove("hidden");
           proportionalMapElement.classList.add("hidden");
@@ -94,6 +101,34 @@
           proportionalMapElement.classList.remove("hidden");
         }
       });
+
+      d3.json("world-map.geojson")
+        .then(function (worldMap) {
+          d3.json("visa-data.json")
+            .then(function (visaData) {
+              function findMissingCountries(datasetA, datasetB) {
+                const countriesA = datasetA.features.map(
+                  (feature) => feature.properties.name
+                );
+                const countriesB = datasetB.map((data) => data.country_name);
+
+                const missingCountries = countriesA.filter(
+                  (country) => !countriesB.includes(country)
+                );
+
+                return missingCountries;
+              }
+
+              const missingCountries = findMissingCountries(worldMap, visaData);
+              console.log(missingCountries);
+            })
+            .catch(function (error) {
+              console.error("Error loading second JSON file:", error);
+            });
+        })
+        .catch(function (error) {
+          console.error("Error loading first JSON file:", error);
+        });
     </script>
   </body>
 </html>
