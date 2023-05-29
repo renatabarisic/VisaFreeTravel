@@ -99,6 +99,72 @@
                 .attr("fill-opacity", 0.5)
                 .attr("stroke", "steelblue")
                 .attr("stroke-opacity", 1);
+
+              var connectionsData = [];
+
+              visaData.forEach(function (d) {
+                var sourceCoords = projection([d.long, d.lat]);
+
+                d.connections.forEach(function (country) {
+                  var target = visaData.find(function (d) {
+                    return d.country_name === country;
+                  });
+
+                  if (target) {
+                    var targetCoords = projection([target.long, target.lat]);
+
+                    connectionsData.push({
+                      source: {
+                        x: sourceCoords[0],
+                        y: sourceCoords[1],
+                      },
+                      target: {
+                        x: targetCoords[0],
+                        y: targetCoords[1],
+                      },
+                    });
+                  } else {
+                    console.log("Target country not found:", country);
+                  }
+                });
+              });
+
+              console.log(connectionsData);
+
+              function curveFunction(source, target) {
+                var dx = target.x - source.x,
+                  dy = target.y - source.y,
+                  dr = Math.sqrt(dx * dx + dy * dy);
+
+                return (
+                  "M" +
+                  source.x +
+                  "," +
+                  source.y +
+                  "A" +
+                  dr +
+                  "," +
+                  dr +
+                  " 0 0,1 " +
+                  target.x +
+                  "," +
+                  target.y
+                );
+              }
+
+              flowMap
+                .selectAll(".connection")
+                .data(connectionsData)
+                .enter()
+                .append("path")
+                .attr("class", "connection")
+                .attr("d", function (d) {
+                  return curveFunction(d.source, d.target);
+                })
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-opacity", 1)
+                .attr("stroke-width", 1);
             })
             .catch(function (error) {
               console.error("Error loading visa data:", error);
@@ -124,34 +190,6 @@
           proportionalMapElement.classList.remove("hidden");
         }
       });
-
-      d3.json("world-map.geojson")
-        .then(function (worldMap) {
-          d3.json("visa-data.json")
-            .then(function (visaData) {
-              function findMissingCountries(datasetA, datasetB) {
-                const countriesA = datasetA.features.map(
-                  (feature) => feature.properties.name
-                );
-                const countriesB = datasetB.map((data) => data.country_name);
-
-                const missingCountries = countriesA.filter(
-                  (country) => !countriesB.includes(country)
-                );
-
-                return missingCountries;
-              }
-
-              const missingCountries = findMissingCountries(worldMap, visaData);
-              console.log(missingCountries);
-            })
-            .catch(function (error) {
-              console.error("Error loading second JSON file:", error);
-            });
-        })
-        .catch(function (error) {
-          console.error("Error loading first JSON file:", error);
-        });
     </script>
   </body>
 </html>
