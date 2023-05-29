@@ -55,14 +55,13 @@
         .style("background", "#AFEEEE");
 
       d3.json("world-map.geojson")
-        .then(function (data) {
-          var projection = d3.geoMercator().fitSize([width, height], data);
-
+        .then(function (worldMap) {
+          var projection = d3.geoMercator().fitSize([width, height], worldMap);
           var path = d3.geoPath().projection(projection);
 
           flowMap
             .selectAll("path")
-            .data(data.features)
+            .data(worldMap.features)
             .enter()
             .append("path")
             .attr("d", path)
@@ -72,18 +71,42 @@
 
           proportionalMap
             .selectAll("path")
-            .data(data.features)
+            .data(worldMap.features)
             .enter()
             .append("path")
             .attr("d", path)
             .attr("fill", "#FFB6C1")
             .attr("stroke", "white")
             .attr("stroke-width", 0.5);
+
+          d3.json("visa-data.json")
+            .then(function (visaData) {
+              proportionalMap
+                .selectAll("circle")
+                .data(visaData)
+                .enter()
+                .append("circle")
+                .attr("cx", function (d) {
+                  return projection([d.long, d.lat])[0];
+                })
+                .attr("cy", function (d) {
+                  return projection([d.long, d.lat])[1];
+                })
+                .attr("r", function (d) {
+                  return Math.sqrt(d.connections.length) * 2;
+                })
+                .attr("fill", "steelblue")
+                .attr("fill-opacity", 0.5)
+                .attr("stroke", "steelblue")
+                .attr("stroke-opacity", 1);
+            })
+            .catch(function (error) {
+              console.error("Error loading visa data:", error);
+            });
         })
         .catch(function (error) {
-          console.log("Error loading GeoJSON data:", error);
+          console.error("Error loading world map data:", error);
         });
-
       var mapSwitcher = document.getElementById("mapSwitcher");
       var flowMapElement = document.getElementById("flowMap");
       var proportionalMapElement = document.getElementById("proportionalMap");
