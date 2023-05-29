@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Visa Free Travel</title>
+    <meta charset="utf-8" />
+    <style>
+      #mapContainer {
+        position: relative;
+      }
+
+      #flowMap,
+      #proportionalMap {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <div id="mapSwitcher">
+      <label>
+        <input type="radio" name="mapType" value="flow" checked> Flow Map
+      </label>
+      <label>
+        <input type="radio" name="mapType" value="proportional"> Proportional Symbol Map
+      </label>
+    </div>
+    <div id="mapContainer">
+      <svg id="flowMap"></svg>
+      <svg id="proportionalMap" class="hidden"></svg>
+    </div>
+    <script>
+      var width = 800;
+      var height = 400;
+
+      var container = d3.select("#mapContainer");
+
+      var flowMap = d3.select("#flowMap")
+        .attr("width", width)
+        .attr("height", height)
+        .style("background", "#AFEEEE");
+
+      var proportionalMap = d3.select("#proportionalMap")
+        .attr("width", width)
+        .attr("height", height)
+        .style("background", "#AFEEEE");
+
+      d3.json("world-map.geojson")
+        .then(function (data) {
+          var projection = d3.geoMercator()
+            .fitSize([width, height], data);
+
+          var path = d3.geoPath().projection(projection);
+
+          flowMap.selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr("fill", "#FFB6C1")
+            .attr("stroke", "white")
+            .attr("stroke-width", 0.5);
+
+          proportionalMap.selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr("fill", "#FFB6C1")
+            .attr("stroke", "white")
+            .attr("stroke-width", 0.5);
+        })
+        .catch(function (error) {
+          console.log("Error loading GeoJSON data:", error);
+        });
+
+      var mapSwitcher = document.getElementById("mapSwitcher");
+      var flowMapElement = document.getElementById("flowMap");
+      var proportionalMapElement = document.getElementById("proportionalMap");
+
+      mapSwitcher.addEventListener("change", function() {
+        var selectedMapType = document.querySelector('input[name="mapType"]:checked').value;
+        
+        if (selectedMapType === "flow") {
+          flowMapElement.classList.remove("hidden");
+          proportionalMapElement.classList.add("hidden");
+        } else if (selectedMapType === "proportional") {
+          flowMapElement.classList.add("hidden");
+          proportionalMapElement.classList.remove("hidden");
+        }
+      });
+    </script>
+  </body>
+</html>
