@@ -4,6 +4,9 @@
     <title>Visa Free Travel</title>
     <meta charset="utf-8" />
     <style>
+      body{
+        font-family: 'Roboto', sans-serif;
+      }
       #mapContainer {
         position: relative;
       }
@@ -18,10 +21,28 @@
       .hidden {
         display: none;
       }
+
+      .country:hover {
+        fill: #ffccd4;
+      }
+
+      .tooltip {
+        position: absolute;
+        pointer-events: none;
+        background-color: #000000e6;
+        color: white;
+        padding: 6px;
+        font-size: 12px;
+        opacity: 0;
+        border-radius: 6px;
+      }
     </style>
   </head>
 
   <body>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+    </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <div id="mapSwitcher">
       <label>
@@ -37,8 +58,8 @@
       <svg id="proportionalMap" class="hidden"></svg>
     </div>
     <script>
-      var width = 800;
-      var height = 400;
+      var width = 1000;
+      var height = 500;
 
       var container = d3.select("#mapContainer");
 
@@ -65,6 +86,7 @@
             .enter()
             .append("path")
             .attr("d", path)
+            .attr("class", "country")
             .attr("fill", "#FFB6C1")
             .attr("stroke", "white")
             .attr("stroke-width", 0.5);
@@ -75,6 +97,7 @@
             .enter()
             .append("path")
             .attr("d", path)
+            .attr("class", "country")
             .attr("fill", "#FFB6C1")
             .attr("stroke", "white")
             .attr("stroke-width", 0.5);
@@ -95,6 +118,7 @@
                 .attr("r", function (d) {
                   return Math.sqrt(d.connections.length) * 2;
                 })
+                .attr("class", "country-circle")
                 .attr("fill", "steelblue")
                 .attr("fill-opacity", 0.5)
                 .attr("stroke", "steelblue")
@@ -169,10 +193,50 @@
             .catch(function (error) {
               console.error("Error loading visa data:", error);
             });
+
+          // Tooltip
+          var tooltip = d3.select("#mapContainer").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+          flowMap.selectAll(".country")
+            .on("mouseover", function (event, d) {
+              d3.select(this).attr("fill", "#ffccd4");
+              tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+              tooltip.html(d.properties.name)
+                .style("left", (event.pageX) + "px")
+                .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function (event, d) {
+              d3.select(this).attr("fill", "#FFB6C1");
+              tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+            });
+
+          proportionalMap.selectAll(".country")
+            .on("mouseover", function (event, d) {
+              d3.select(this).attr("fill", "#ffccd4");
+              tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+              tooltip.html(d.properties.name)
+                .style("left", (event.pageX) + "px")
+                .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function (event, d) {
+              d3.select(this).attr("fill", "#FFB6C1");
+              tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+            });
         })
         .catch(function (error) {
           console.error("Error loading world map data:", error);
         });
+
       var mapSwitcher = document.getElementById("mapSwitcher");
       var flowMapElement = document.getElementById("flowMap");
       var proportionalMapElement = document.getElementById("proportionalMap");
