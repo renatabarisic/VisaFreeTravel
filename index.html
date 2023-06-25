@@ -2,30 +2,36 @@
 <html>
   <head>
     <title>Visa Free Travel</title>
+    <link rel="icon" href="images/plane.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/plane.png" type="image/x-icon">
     <meta charset="utf-8" />
     <style>
       body{
         font-family: 'Roboto', sans-serif;
       }
-      #mapContainer {
+      .heading{
+        font-size: 48px;
+        border-bottom: 3px solid black;
+        margin-top: 0px;
+        padding: 20px 0px;
+      }
+      .content{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .map-switcher{
+        margin-bottom: 20px;
+      }
+      .map-container {
         position: relative;
       }
-
-      #flowMap,
-      #proportionalMap {
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-
       .hidden {
         display: none;
       }
-
       .country:hover {
         fill: #ffccd4;
       }
-
       .tooltip {
         position: absolute;
         pointer-events: none;
@@ -36,6 +42,11 @@
         opacity: 0;
         border-radius: 6px;
       }
+      .footer{
+        margin-top: 20px;
+        padding: 20px 0px;
+        border-top: 2px solid black;
+      }
     </style>
   </head>
 
@@ -44,19 +55,28 @@
       @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <div id="mapSwitcher">
-      <label>
-        <input type="radio" name="mapType" value="flow" checked /> Flow Map
-      </label>
-      <label>
-        <input type="radio" name="mapType" value="proportional" /> Proportional
-        Symbol Map
-      </label>
+    <h1 class="heading">
+        <span class="heading-icon">&#x2708;</span>
+        Visa Free Travel
+    </h1>
+    <div class="content">
+      <div class="map-switcher" id="mapSwitcher">
+        <label>
+          <input type="radio" name="mapType" value="flow" checked /> Flow Map
+        </label>
+        <label>
+          <input type="radio" name="mapType" value="proportional" /> Proportional
+          Symbol Map
+        </label>
+      </div>
+      <div class="map-container" id="mapContainer">
+        <svg  id="flowMap"></svg>
+        <svg class="hidden" id="proportionalMap"></svg>
+      </div>
     </div>
-    <div id="mapContainer">
-      <svg id="flowMap"></svg>
-      <svg id="proportionalMap" class="hidden"></svg>
-    </div>
+    <footer class="footer">
+      © 2023, Renata Barišić
+    </footer>
     <script>
       var width = 1000;
       var height = 500;
