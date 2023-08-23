@@ -212,8 +212,6 @@
                 });
               });
 
-              console.log(connectionsData);
-
               connectionPaths = flowMap
                 .selectAll(".connection")
                 .data(connectionsData)
@@ -226,7 +224,8 @@
                 .attr("fill", "none")
                 .attr("stroke", "steelblue")
                 .attr("stroke-opacity", 1)
-                .attr("stroke-width", 1);
+                .attr("stroke-width", 1)
+                .attr("visibility", "hidden");
             })
             .catch(function (error) {
               console.error("Error loading visa data:", error);
