@@ -2,25 +2,25 @@
 <html>
   <head>
     <title>Visa Free Travel</title>
-    <link rel="icon" href="images/plane.png" type="image/x-icon">
-    <link rel="shortcut icon" href="images/plane.png" type="image/x-icon">
+    <link rel="icon" href="images/plane.png" type="image/x-icon" />
+    <link rel="shortcut icon" href="images/plane.png" type="image/x-icon" />
     <meta charset="utf-8" />
     <style>
-      body{
-        font-family: 'Roboto', sans-serif;
+      body {
+        font-family: "Roboto", sans-serif;
       }
-      .heading{
+      .heading {
         font-size: 48px;
         border-bottom: 3px solid black;
         margin-top: 0px;
         padding: 20px 0px;
       }
-      .content{
+      .content {
         display: flex;
         flex-direction: column;
         align-items: center;
       }
-      .map-switcher{
+      .map-switcher {
         margin-bottom: 20px;
       }
       .map-container {
@@ -42,7 +42,7 @@
         opacity: 0;
         border-radius: 6px;
       }
-      .footer{
+      .footer {
         margin-top: 20px;
         padding: 20px 0px;
         border-top: 2px solid black;
@@ -52,12 +52,12 @@
 
   <body>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+      @import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <h1 class="heading">
-        <span class="heading-icon">&#x2708;</span>
-        Visa Free Travel
+      <span class="heading-icon">&#x2708;</span>
+      Visa Free Travel
     </h1>
     <div class="content">
       <div class="map-switcher" id="mapSwitcher">
@@ -65,18 +65,16 @@
           <input type="radio" name="mapType" value="flow" checked /> Flow Map
         </label>
         <label>
-          <input type="radio" name="mapType" value="proportional" /> Proportional
-          Symbol Map
+          <input type="radio" name="mapType" value="proportional" />
+          Proportional Symbol Map
         </label>
       </div>
       <div class="map-container" id="mapContainer">
-        <svg  id="flowMap"></svg>
+        <svg id="flowMap"></svg>
         <svg class="hidden" id="proportionalMap"></svg>
       </div>
     </div>
-    <footer class="footer">
-      © 2023, Renata Barišić
-    </footer>
+    <footer class="footer">© 2023, Renata Barišić</footer>
     <script>
       var width = 1000;
       var height = 500;
@@ -95,6 +93,31 @@
         .attr("height", height)
         .style("background", "#AFEEEE");
 
+      var connectionsData = [];
+
+      var connectionPaths;
+
+      var curveFunction = function (source, target) {
+        var dx = target.x - source.x,
+          dy = target.y - source.y,
+          dr = Math.sqrt(dx * dx + dy * dy);
+
+        return (
+          "M" +
+          source.x +
+          "," +
+          source.y +
+          "A" +
+          dr +
+          "," +
+          dr +
+          " 0 0,1 " +
+          target.x +
+          "," +
+          target.y
+        );
+      };
+
       d3.json("world-map.geojson")
         .then(function (worldMap) {
           var projection = d3.geoMercator().fitSize([width, height], worldMap);
@@ -109,7 +132,23 @@
             .attr("class", "country")
             .attr("fill", "#FFB6C1")
             .attr("stroke", "white")
-            .attr("stroke-width", 0.5);
+            .attr("stroke-width", 0.5)
+            .on("click", function (event, d) {
+              var clickedCountry = d.properties.name;
+
+              var filteredConnections = connectionsData.filter(function (
+                connection
+              ) {
+                return (
+                  connection.sourceCountry === clickedCountry ||
+                  connection.targetCountry === clickedCountry
+                );
+              });
+
+              connectionPaths.attr("visibility", function (d) {
+                return filteredConnections.includes(d) ? "visible" : "hidden";
+              });
+            });
 
           proportionalMap
             .selectAll("path")
@@ -144,8 +183,6 @@
                 .attr("stroke", "steelblue")
                 .attr("stroke-opacity", 1);
 
-              var connectionsData = [];
-
               visaData.forEach(function (d) {
                 var sourceCoords = projection([d.long, d.lat]);
 
@@ -166,6 +203,8 @@
                         x: targetCoords[0],
                         y: targetCoords[1],
                       },
+                      sourceCountry: d.country_name,
+                      targetCountry: target.country_name,
                     });
                   } else {
                     console.log("Target country not found:", country);
@@ -175,28 +214,7 @@
 
               console.log(connectionsData);
 
-              function curveFunction(source, target) {
-                var dx = target.x - source.x,
-                  dy = target.y - source.y,
-                  dr = Math.sqrt(dx * dx + dy * dy);
-
-                return (
-                  "M" +
-                  source.x +
-                  "," +
-                  source.y +
-                  "A" +
-                  dr +
-                  "," +
-                  dr +
-                  " 0 0,1 " +
-                  target.x +
-                  "," +
-                  target.y
-                );
-              }
-
-              flowMap
+              connectionPaths = flowMap
                 .selectAll(".connection")
                 .data(connectionsData)
                 .enter()
@@ -214,43 +232,40 @@
               console.error("Error loading visa data:", error);
             });
 
-          // Tooltip
-          var tooltip = d3.select("#mapContainer").append("div")
+          var tooltip = d3
+            .select("#mapContainer")
+            .append("div")
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-          flowMap.selectAll(".country")
+          flowMap
+            .selectAll(".country")
             .on("mouseover", function (event, d) {
               d3.select(this).attr("fill", "#ffccd4");
-              tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-              tooltip.html(d.properties.name)
-                .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
+              tooltip.transition().duration(200).style("opacity", 0.9);
+              tooltip
+                .html(d.properties.name)
+                .style("left", event.pageX + "px")
+                .style("top", event.pageY - 28 + "px");
             })
             .on("mouseout", function (event, d) {
               d3.select(this).attr("fill", "#FFB6C1");
-              tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
+              tooltip.transition().duration(500).style("opacity", 0);
             });
 
-          proportionalMap.selectAll(".country")
+          proportionalMap
+            .selectAll(".country")
             .on("mouseover", function (event, d) {
               d3.select(this).attr("fill", "#ffccd4");
-              tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-              tooltip.html(d.properties.name)
-                .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
+              tooltip.transition().duration(200).style("opacity", 0.9);
+              tooltip
+                .html(d.properties.name)
+                .style("left", event.pageX + "px")
+                .style("top", event.pageY - 28 + "px");
             })
             .on("mouseout", function (event, d) {
               d3.select(this).attr("fill", "#FFB6C1");
-              tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
+              tooltip.transition().duration(500).style("opacity", 0);
             });
         })
         .catch(function (error) {
