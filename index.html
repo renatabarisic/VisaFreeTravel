@@ -3,7 +3,6 @@
   <head>
     <title>Visa Free Travel</title>
     <link rel="icon" href="images/plane.png" type="image/x-icon" />
-    <link rel="shortcut icon" href="images/plane.png" type="image/x-icon" />
     <meta charset="utf-8" />
     <style>
       body {
@@ -25,12 +24,32 @@
       }
       .map-container {
         position: relative;
+        cursor: grab;
+      }
+      .map-container:active {
+        cursor: grabbing;
+      }
+      .map-heading {
+        width: 1000px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .zoom-button {
+        border: 0px;
+        border-radius: 100%;
+        background-color: black;
+        color: white;
+      }
+      .zoom-button:hover {
+        cursor: pointer;
+        background-color: #222222;
       }
       .hidden {
         display: none;
       }
       .country:hover {
         fill: #ffccd4;
+        cursor: pointer;
       }
       .tooltip {
         position: absolute;
@@ -60,14 +79,20 @@
       Visa Free Travel
     </h1>
     <div class="content">
-      <div class="map-switcher" id="mapSwitcher">
-        <label>
-          <input type="radio" name="mapType" value="flow" checked /> Flow Map
-        </label>
-        <label>
-          <input type="radio" name="mapType" value="proportional" />
-          Proportional Symbol Map
-        </label>
+      <div class="map-heading">
+        <div class="map-switcher" id="mapSwitcher">
+          <label>
+            <input type="radio" name="mapType" value="flow" checked /> Flow Map
+          </label>
+          <label>
+            <input type="radio" name="mapType" value="proportional" />
+            Proportional Symbol Map
+          </label>
+        </div>
+        <div id="zoomButtons">
+          <button class="zoom-button" id="zoomInButton">+</button>
+          <button class="zoom-button" id="zoomOutButton">-</button>
+        </div>
       </div>
       <div class="map-container" id="mapContainer">
         <svg id="flowMap"></svg>
@@ -150,6 +175,8 @@
               });
             });
 
+          var zoomScale = 0.4;
+
           proportionalMap
             .selectAll("path")
             .data(worldMap.features)
@@ -175,7 +202,7 @@
                   return projection([d.long, d.lat])[1];
                 })
                 .attr("r", function (d) {
-                  return Math.sqrt(d.connections.length) * 2;
+                  return Math.sqrt(d.connections.length) * (1 / zoomScale);
                 })
                 .attr("class", "country-circle")
                 .attr("fill", "steelblue")
@@ -224,7 +251,7 @@
                 .attr("fill", "none")
                 .attr("stroke", "steelblue")
                 .attr("stroke-opacity", 1)
-                .attr("stroke-width", 1)
+                .attr("stroke-width", Math.sqrt(1 / zoomScale))
                 .attr("visibility", "hidden");
             })
             .catch(function (error) {
@@ -288,6 +315,59 @@
           proportionalMapElement.classList.remove("hidden");
         }
       });
+
+      var zoom = d3.zoom().on("zoom", zoomed);
+      flowMap.call(zoom);
+      proportionalMap.call(zoom);
+
+      function zoomed(event) {
+        zoomScale = event.transform.k;
+        flowMap.selectAll(".country").attr("transform", event.transform);
+        proportionalMap
+          .selectAll(".country")
+          .attr("transform", event.transform);
+        proportionalMap
+          .selectAll(".country-circle")
+          .attr("transform", event.transform)
+          .attr("r", function (d) {
+            return Math.sqrt(d.connections.length) * (1 / zoomScale) * 2.5;
+          });
+        connectionPaths
+          .attr("transform", event.transform)
+          .attr("stroke-width", function (d) {
+            return Math.sqrt(1 / zoomScale);
+          });
+      }
+
+      document
+        .getElementById("zoomInButton")
+        .addEventListener("click", function () {
+          var currentTransform = d3.zoomTransform(flowMap.node());
+          var newScale = currentTransform.k * 1.2;
+          var newTransform = d3.zoomIdentity
+            .translate(currentTransform.x, currentTransform.y)
+            .scale(newScale);
+          flowMap.transition().duration(300).call(zoom.transform, newTransform);
+          proportionalMap
+            .transition()
+            .duration(300)
+            .call(zoom.transform, newTransform);
+        });
+
+      document
+        .getElementById("zoomOutButton")
+        .addEventListener("click", function () {
+          var currentTransform = d3.zoomTransform(flowMap.node());
+          var newScale = currentTransform.k / 1.2;
+          var newTransform = d3.zoomIdentity
+            .translate(currentTransform.x, currentTransform.y)
+            .scale(newScale);
+          flowMap.transition().duration(300).call(zoom.transform, newTransform);
+          proportionalMap
+            .transition()
+            .duration(300)
+            .call(zoom.transform, newTransform);
+        });
     </script>
   </body>
 </html>
