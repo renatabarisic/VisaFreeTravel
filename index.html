@@ -39,10 +39,11 @@
         border-radius: 100%;
         background-color: black;
         color: white;
+        font-size: 16px;
       }
       .zoom-button:hover {
         cursor: pointer;
-        background-color: #222222;
+        background-color: #2b2b2b;
       }
       .hidden {
         display: none;
@@ -58,8 +59,9 @@
         color: white;
         padding: 6px;
         font-size: 12px;
-        opacity: 0;
         border-radius: 6px;
+        display: none;
+        z-index: 9999;
       }
       .footer {
         margin-top: 20px;
@@ -68,7 +70,7 @@
       }
     </style>
   </head>
-
+  <div class="tooltip" id="tooltip"></div>
   <body>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
@@ -158,6 +160,13 @@
             .attr("fill", "#FFB6C1")
             .attr("stroke", "white")
             .attr("stroke-width", 0.5)
+            .on("mouseover", function (event, d) {
+              var countryName = d.properties.name;
+              showTooltip(event.pageX, event.pageY, countryName);
+            })
+            .on("mouseout", function () {
+              hideTooltip();
+            })
             .on("click", function (event, d) {
               var clickedCountry = d.properties.name;
 
@@ -186,7 +195,14 @@
             .attr("class", "country")
             .attr("fill", "#FFB6C1")
             .attr("stroke", "white")
-            .attr("stroke-width", 0.5);
+            .attr("stroke-width", 0.5)
+            .on("mouseover", function (event, d) {
+              var countryName = d.properties.name;
+              showTooltip(event.pageX, event.pageY, countryName);
+            })
+            .on("mouseout", function () {
+              hideTooltip();
+            });
 
           d3.json("visa-data.json")
             .then(function (visaData) {
@@ -208,7 +224,14 @@
                 .attr("fill", "steelblue")
                 .attr("fill-opacity", 0.5)
                 .attr("stroke", "steelblue")
-                .attr("stroke-opacity", 1);
+                .attr("stroke-opacity", 1)
+                .on("mouseover", function (event, d) {
+                  var countryName = d.country_name;
+                  showTooltip(event.pageX, event.pageY, countryName);
+                })
+                .on("mouseout", function () {
+                  hideTooltip();
+                });
 
               visaData.forEach(function (d) {
                 var sourceCoords = projection([d.long, d.lat]);
@@ -257,42 +280,6 @@
             .catch(function (error) {
               console.error("Error loading visa data:", error);
             });
-
-          var tooltip = d3
-            .select("#mapContainer")
-            .append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
-          flowMap
-            .selectAll(".country")
-            .on("mouseover", function (event, d) {
-              d3.select(this).attr("fill", "#ffccd4");
-              tooltip.transition().duration(200).style("opacity", 0.9);
-              tooltip
-                .html(d.properties.name)
-                .style("left", event.pageX + "px")
-                .style("top", event.pageY - 28 + "px");
-            })
-            .on("mouseout", function (event, d) {
-              d3.select(this).attr("fill", "#FFB6C1");
-              tooltip.transition().duration(500).style("opacity", 0);
-            });
-
-          proportionalMap
-            .selectAll(".country")
-            .on("mouseover", function (event, d) {
-              d3.select(this).attr("fill", "#ffccd4");
-              tooltip.transition().duration(200).style("opacity", 0.9);
-              tooltip
-                .html(d.properties.name)
-                .style("left", event.pageX + "px")
-                .style("top", event.pageY - 28 + "px");
-            })
-            .on("mouseout", function (event, d) {
-              d3.select(this).attr("fill", "#FFB6C1");
-              tooltip.transition().duration(500).style("opacity", 0);
-            });
         })
         .catch(function (error) {
           console.error("Error loading world map data:", error);
@@ -315,6 +302,19 @@
           proportionalMapElement.classList.remove("hidden");
         }
       });
+
+      function showTooltip(x, y, text) {
+        var tooltip = document.getElementById("tooltip");
+        tooltip.innerHTML = text;
+        tooltip.style.left = event.pageX + "px";
+        tooltip.style.top = event.pageY + "px";
+        tooltip.style.display = "block";
+      }
+
+      function hideTooltip() {
+        var tooltip = document.getElementById("tooltip");
+        tooltip.style.display = "none";
+      }
 
       var zoom = d3.zoom().on("zoom", zoomed);
       flowMap.call(zoom);
