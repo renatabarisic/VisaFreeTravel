@@ -1,0 +1,74 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+
+body {
+  font-family: "Roboto", sans-serif;
+}
+.heading {
+  font-size: 48px;
+  border-bottom: 3px solid black;
+  margin-top: 0px;
+  padding: 20px 0px;
+}
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.map-switcher {
+  margin-bottom: 20px;
+}
+.map-container {
+  position: relative;
+  cursor: grab;
+}
+.map-container:active {
+  cursor: grabbing;
+}
+.map-heading {
+  width: 1000px;
+  display: flex;
+  justify-content: space-between;
+}
+.zoom-button {
+  border: 0px;
+  border-radius: 100%;
+  background-color: black;
+  color: white;
+  font-size: 16px;
+}
+.zoom-button:hover {
+  cursor: pointer;
+  background-color: #2b2b2b;
+}
+.hidden {
+  display: none;
+}
+.country:hover {
+  fill: #ffccd4;
+  cursor: pointer;
+}
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background-color: #000000e6;
+  color: white;
+  padding: 6px;
+  font-size: 12px;
+  border-radius: 6px;
+  display: none;
+  z-index: 9999;
+}
+.containers {
+  display: flex;
+}
+.info-container {
+  margin-left: 20px;
+}
+.country-name {
+  margin-top: 0px;
+}
+.footer {
+  margin-top: 20px;
+  padding: 20px 0px;
+  border-top: 2px solid black;
+}
