@@ -17,7 +17,7 @@
       .content {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
       }
       .map-switcher {
         margin-bottom: 20px;
@@ -63,6 +63,15 @@
         display: none;
         z-index: 9999;
       }
+      .containers {
+        display: flex;
+      }
+      .info-container {
+        margin-left: 20px;
+      }
+      .country-name {
+        margin-top: 0px;
+      }
       .footer {
         margin-top: 20px;
         padding: 20px 0px;
@@ -96,9 +105,18 @@
           <button class="zoom-button" id="zoomOutButton">-</button>
         </div>
       </div>
-      <div class="map-container" id="mapContainer">
-        <svg id="flowMap"></svg>
-        <svg class="hidden" id="proportionalMap"></svg>
+      <div class="containers">
+        <div class="map-container" id="mapContainer">
+          <svg id="flowMap"></svg>
+          <svg class="hidden" id="proportionalMap"></svg>
+        </div>
+        <div class="info-container" id="infoContainer">
+          <h2 class="country-name" id="countryName"></h2>
+          <p id="outgoing"></p>
+          <p id="gdp"></p>
+          <p id="incoming"></p>
+          <p id="number"></p>
+        </div>
       </div>
     </div>
     <footer class="footer">© 2023, Renata Barišić</footer>
@@ -150,62 +168,118 @@
           var projection = d3.geoMercator().fitSize([width, height], worldMap);
           var path = d3.geoPath().projection(projection);
 
-          flowMap
-            .selectAll("path")
-            .data(worldMap.features)
-            .enter()
-            .append("path")
-            .attr("d", path)
-            .attr("class", "country")
-            .attr("fill", "#FFB6C1")
-            .attr("stroke", "white")
-            .attr("stroke-width", 0.5)
-            .on("mouseover", function (event, d) {
-              var countryName = d.properties.name;
-              showTooltip(event.pageX, event.pageY, countryName);
-            })
-            .on("mouseout", function () {
-              hideTooltip();
-            })
-            .on("click", function (event, d) {
-              var clickedCountry = d.properties.name;
-
-              var filteredConnections = connectionsData.filter(function (
-                connection
-              ) {
-                return (
-                  connection.sourceCountry === clickedCountry ||
-                  connection.targetCountry === clickedCountry
-                );
-              });
-
-              connectionPaths.attr("visibility", function (d) {
-                return filteredConnections.includes(d) ? "visible" : "hidden";
-              });
-            });
-
-          var zoomScale = 0.4;
-
-          proportionalMap
-            .selectAll("path")
-            .data(worldMap.features)
-            .enter()
-            .append("path")
-            .attr("d", path)
-            .attr("class", "country")
-            .attr("fill", "#FFB6C1")
-            .attr("stroke", "white")
-            .attr("stroke-width", 0.5)
-            .on("mouseover", function (event, d) {
-              var countryName = d.properties.name;
-              showTooltip(event.pageX, event.pageY, countryName);
-            })
-            .on("mouseout", function () {
-              hideTooltip();
-            });
-
           d3.json("visa-data.json")
             .then(function (visaData) {
+              flowMap
+                .selectAll("path")
+                .data(worldMap.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("class", "country")
+                .attr("fill", "#FFB6C1")
+                .attr("stroke", "white")
+                .attr("stroke-width", 0.5)
+                .on("mouseover", function (event, d) {
+                  var countryName = d.properties.name;
+                  showTooltip(event.pageX, event.pageY, countryName);
+                })
+                .on("mouseout", function () {
+                  hideTooltip();
+                })
+                .on("click", function (event, d) {
+                  var clickedCountry = d.properties.name;
+                  updateInfoContainer(clickedCountry, worldMap, visaData);
+
+                  var filteredConnections = connectionsData.filter(function (
+                    connection
+                  ) {
+                    return (
+                      connection.sourceCountry === clickedCountry ||
+                      connection.targetCountry === clickedCountry
+                    );
+                  });
+
+                  connectionPaths.attr("visibility", function (d) {
+                    return filteredConnections.includes(d)
+                      ? "visible"
+                      : "hidden";
+                  });
+                });
+
+              var zoomScale = 0.5;
+
+              proportionalMap
+                .selectAll("path")
+                .data(worldMap.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("class", "country")
+                .attr("fill", "#FFB6C1")
+                .attr("stroke", "white")
+                .attr("stroke-width", 0.5)
+                .on("mouseover", function (event, d) {
+                  var countryName = d.properties.name;
+                  showTooltip(event.pageX, event.pageY, countryName);
+                })
+                .on("mouseout", function () {
+                  hideTooltip();
+                })
+                .on("click", function (event, d) {
+                  var clickedCountry = d.properties.name;
+                  updateInfoContainer(clickedCountry, worldMap, visaData);
+                });
+
+              function updateInfoContainer(countryName, worldMap, visaData) {
+                var infoContainer = document.getElementById("infoContainer");
+                var countryData = visaData.find(function (d) {
+                  return d.country_name === countryName;
+                });
+
+                if (!countryData) {
+                  var countryProperties = worldMap.features.find(function (
+                    feature
+                  ) {
+                    return feature.properties.name === countryName;
+                  });
+
+                  var countryNameElement =
+                    document.getElementById("countryName");
+                  var outgoingElement = document.getElementById("outgoing");
+                  var gdpElement = document.getElementById("gdp");
+                  var incomingElement = document.getElementById("incoming");
+                  var numberElement = document.getElementById("number");
+
+                  countryNameElement.textContent = countryName;
+                  outgoingElement.textContent = "Outgoing: ???";
+                  gdpElement.textContent = "GDP per Capita: ???";
+                  incomingElement.textContent = "Incoming: ???";
+                  numberElement.textContent = "Number of Connections: 0";
+                } else {
+                  var countryNameElement =
+                    document.getElementById("countryName");
+                  var outgoingElement = document.getElementById("outgoing");
+                  var gdpElement = document.getElementById("gdp");
+                  var incomingElement = document.getElementById("incoming");
+                  var numberElement = document.getElementById("number");
+
+                  countryNameElement.textContent = countryData.country_name;
+                  outgoingElement.textContent = `Outgoing: ${
+                    countryData.outgoing || "???"
+                  }`;
+                  gdpElement.textContent = `GDP per Capita: ${
+                    countryData.gdp_percapita || "???"
+                  }`;
+                  incomingElement.textContent = `Incoming: ${
+                    countryData.incoming || "???"
+                  }`;
+                  numberElement.textContent = `Number of Connections: ${
+                    countryData.connections.length || 0
+                  }`;
+                }
+              }
+
               proportionalMap
                 .selectAll("circle")
                 .data(visaData)
@@ -231,6 +305,10 @@
                 })
                 .on("mouseout", function () {
                   hideTooltip();
+                })
+                .on("click", function (event, d) {
+                  var clickedCountry = d.country_name;
+                  updateInfoContainer(clickedCountry, worldMap, visaData);
                 });
 
               visaData.forEach(function (d) {
