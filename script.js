@@ -124,9 +124,9 @@ d3.json("world-map.geojson")
             var numberElement = document.getElementById("number");
 
             countryNameElement.textContent = countryName;
-            outgoingElement.textContent = "Outgoing: ???";
+            outgoingElement.textContent = "Outgoing Tourists: ???";
             gdpElement.textContent = "GDP per Capita: ???";
-            incomingElement.textContent = "Incoming: ???";
+            incomingElement.textContent = "Incoming Tourists: ???";
             numberElement.textContent = "Number of Connections: 0";
           } else {
             var countryNameElement = document.getElementById("countryName");
@@ -136,13 +136,13 @@ d3.json("world-map.geojson")
             var numberElement = document.getElementById("number");
 
             countryNameElement.textContent = countryData.country_name;
-            outgoingElement.textContent = `Outgoing: ${
+            outgoingElement.textContent = `Outgoing Tourists: ${
               countryData.outgoing || "???"
             }`;
             gdpElement.textContent = `GDP per Capita: ${
-              countryData.gdp_percapita || "???"
+              countryData.gdp_percapita + " $" || "???"
             }`;
-            incomingElement.textContent = `Incoming: ${
+            incomingElement.textContent = `Incoming Tourists: ${
               countryData.incoming || "???"
             }`;
             numberElement.textContent = `Number of Connections: ${
@@ -290,7 +290,7 @@ document.getElementById("zoomInButton").addEventListener("click", function () {
   var currentTransform = d3.zoomTransform(flowMap.node());
   var newScale = currentTransform.k * 1.2;
   var newTransform = d3.zoomIdentity
-    .translate(currentTransform.x, currentTransform.y)
+    .translate(currentTransform.x - 100, currentTransform.y - 50)
     .scale(newScale);
   flowMap.transition().duration(300).call(zoom.transform, newTransform);
   proportionalMap.transition().duration(300).call(zoom.transform, newTransform);
@@ -300,7 +300,7 @@ document.getElementById("zoomOutButton").addEventListener("click", function () {
   var currentTransform = d3.zoomTransform(flowMap.node());
   var newScale = currentTransform.k / 1.2;
   var newTransform = d3.zoomIdentity
-    .translate(currentTransform.x, currentTransform.y)
+    .translate(currentTransform.x + 50, currentTransform.y + 25)
     .scale(newScale);
   flowMap.transition().duration(300).call(zoom.transform, newTransform);
   proportionalMap.transition().duration(300).call(zoom.transform, newTransform);
