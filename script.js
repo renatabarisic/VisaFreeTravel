@@ -40,12 +40,12 @@ var curveFunction = function (source, target) {
   );
 };
 
-d3.json("world-map.geojson")
+d3.json("datasets/world-map.geojson")
   .then(function (worldMap) {
     var projection = d3.geoMercator().fitSize([width, height], worldMap);
     var path = d3.geoPath().projection(projection);
 
-    d3.json("visa-data.json")
+    d3.json("datasets/visa-data.json")
       .then(function (visaData) {
         flowMap
           .selectAll("path")
